@@ -181,6 +181,7 @@ bool DefaultRobotHWSim::initSim(const mjModel *m_ptr, mjData *d_ptr, MujocoEnv *
 		}
 
 		int joint_id = mujoco_ros::util::jointName2id(const_cast<mjModel *>(m_ptr), joint_names_[j]);
+		ROS_INFO_STREAM("Joint ID: " << joint_id << " for joint " << joint_names_[j] << " " <<  hardware_interface);
 		if (joint_id < 0) {
 			ROS_ERROR_STREAM_NAMED("default_robot_hw_sim", "This robot has a joint named '"
 			                                                   << joint_names_[j]
@@ -267,17 +268,18 @@ void DefaultRobotHWSim::writeSim(ros::Time time, ros::Duration period)
 	vj_limits_interface_.enforceLimits(period);
 
 	for (unsigned int j = 0; j < n_dof_; j++) {
+
 		switch (joint_control_methods_[j]) {
 			case EFFORT: {
 				const double effort                         = e_stop_active_ ? 0 : joint_effort_command_[j];
-				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[j]] = effort;
+				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]] = effort;
 				break;
 			}
 
 			case POSITION: {
-				d_ptr_->qpos[m_ptr_->jnt_dofadr[j]]         = joint_position_command_[j];
-				d_ptr_->qvel[m_ptr_->jnt_dofadr[j]]         = 0.;
-				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[j]] = 0.;
+				d_ptr_->qpos[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]]         = joint_position_command_[j];
+				d_ptr_->qvel[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]]         = 0.;
+				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]] = 0.;
 				break;
 			}
 
@@ -299,13 +301,13 @@ void DefaultRobotHWSim::writeSim(ros::Time time, ros::Duration period)
 
 				const double effort_limit = joint_effort_limits_[j];
 				const double effort = clamp(pid_controllers_[j].computeCommand(error, period), -effort_limit, effort_limit);
-				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[j]] = effort;
+				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]] = effort;
 				break;
 			}
 
 			case VELOCITY: {
-				d_ptr_->qvel[m_ptr_->jnt_dofadr[j]]         = e_stop_active_ ? 0. : joint_velocity_command_[j];
-				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[j]] = 0.;
+				d_ptr_->qvel[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]]         = e_stop_active_ ? 0. : joint_velocity_command_[j];
+				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]] = 0.;
 				break;
 			}
 
@@ -318,7 +320,7 @@ void DefaultRobotHWSim::writeSim(ros::Time time, ros::Duration period)
 					error = joint_velocity_command_[j] - joint_velocity_[j];
 				const double effort_limit = joint_effort_limits_[j];
 				const double effort = clamp(pid_controllers_[j].computeCommand(error, period), -effort_limit, effort_limit);
-				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[j]] = effort;
+				d_ptr_->qfrc_applied[m_ptr_->jnt_dofadr[mujoco_joint_ids_[j]]] = effort;
 				break;
 			}
 		}
