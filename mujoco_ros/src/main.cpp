@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 	 * server. If both string and file are provided, the string takes precedence.
 	 */
 	std::string filename;
-	nh.getParam("modelfile", filename);
+	nh.param<std::string>("modelfile", filename,"");
 
 	std::string xml_content_path;
 	std::string xml_content;
@@ -113,10 +113,12 @@ int main(int argc, char **argv)
 		if (nh.searchParam("mujoco_xml", xml_content_path) || ros::param::search("mujoco_xml", xml_content_path)) {
 			ROS_DEBUG_STREAM("Found mujoco_xml_content param under " << xml_content_path);
 
+			ROS_INFO_STREAM("HERE: " << xml_content_path);
+
 			nh.getParam(xml_content_path, xml_content);
 			if (!xml_content.empty()) {
 				ROS_INFO("Got xml content from ros param server");
-				filename = "rosparam_content";
+				filename = xml_content_path;
 			}
 			wait_for_xml = false;
 		}

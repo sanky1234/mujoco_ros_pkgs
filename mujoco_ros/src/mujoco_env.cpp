@@ -822,24 +822,39 @@ bool MujocoEnv::initModelFromQueue()
 	char *filedata_backup = new char[filecontent_size];
 
 	if (is_file) {
+		ROS_ERROR_STREAM("IS FILE");
 		ROS_DEBUG("\tModel is a regular file. Loading from filesystem");
 	} else if (queued_filename_[0] != '\0') { // new model string
 		ROS_DEBUG("\tModel is not a regular file. Loading from string");
-
+		ROS_ERROR_STREAM("IS NOT FILE. LOADING FROM STRING");
 		ROS_WARN("Loading nested resources (textures, meshes, ...) from string is broken since 2.3.4. A fix is on the "
 		         "way (see https://github.com/deepmind/mujoco/discussions/957#discussion-5348269)");
+
 
 		if (vfs_id > -1) {
 			ROS_DEBUG("\tBacking up old string content");
 			memcpy(filedata_backup, vfs_.filedata[vfs_id], filecontent_size);
 		}
+		ROS_ERROR_STREAM(queued_filename_);
 
-		mju::strcpy_arr(queued_filename_, "model_string");
-		mj_deleteFileVFS(&vfs_, "model_string");
-		mj_makeEmptyFileVFS(&vfs_, "model_string", mju::strlen_arr(queued_filename_));
-		int file_idx = mj_findFileVFS(&vfs_, "model_string");
-		memcpy(vfs_.filedata[file_idx], queued_filename_, mju::strlen_arr(queued_filename_));
-		ROS_DEBUG("\tSaved string content to VFS");
+		std::string model_string;
+		nh_->getParam(queued_filename_,model_string);
+
+		if (model_string.empty()) {
+			ROS_ERROR_STREAM("Model string is empty");
+			exit(1);
+		}
+
+			mju::strcpy_arr(queued_filename_, "model_string");
+
+			mj_deleteFileVFS(&vfs_, "model_string");
+			mj_addBufferVFS(&vfs_, "model_string", model_string.c_str(), model_string.size()+1);
+
+			// mj_makeEmptyFileVFS(&vfs_, "model_string", mju::strlen_arr(queued_filename_));
+			int file_idx = mj_findFileVFS(&vfs_, "model_string");
+			// memcpy(vfs_.filedata[file_idx], queued_filename_, mju::strlen_arr(queued_filename_));
+			ROS_DEBUG_STREAM("\tSaved string content to VFS at index" << file_idx);
+	
 	}
 
 	if (is_mjb) {
