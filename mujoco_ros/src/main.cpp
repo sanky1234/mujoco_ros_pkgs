@@ -123,7 +123,12 @@ int main(int argc, char **argv)
 				if(!std::strncmp(file_content + mju::strlen_arr(file_content) - 4, ".xml",
 	                  mju::sizeof_arr(file_content) - mju::strlen_arr(file_content) + 4)){
 						filename = file_content;
-				}else{
+				}else if(!std::strncmp(file_content + mju::strlen_arr(file_content) - 4, ".mjb",
+	                  mju::sizeof_arr(file_content) - mju::strlen_arr(file_content) + 4)){
+						filename = file_content;
+
+				}
+				else{
 					filename = xml_content_path;
 				}
 
