@@ -118,7 +118,15 @@ int main(int argc, char **argv)
 			nh.getParam(xml_content_path, xml_content);
 			if (!xml_content.empty()) {
 				ROS_INFO("Got xml content from ros param server");
-				filename = xml_content_path;
+				char file_content[1000];
+				mju::strcpy_arr(file_content, xml_content.c_str());
+				if(!std::strncmp(file_content + mju::strlen_arr(file_content) - 4, ".xml",
+	                  mju::sizeof_arr(file_content) - mju::strlen_arr(file_content) + 4)){
+						filename = file_content;
+				}else{
+					filename = xml_content_path;
+				}
+
 			}
 			wait_for_xml = false;
 		}
